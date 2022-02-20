@@ -33,6 +33,9 @@ steps:
     projects: '**/*Tests/*.csproj'
     arguments: --configuration $(buildConfiguration)
     
+- task: PublishTestResults@2
+  condition: succeededOrFailed()
+
 - task: VSBuild@1
   inputs:
     solution: '$(solution)'
