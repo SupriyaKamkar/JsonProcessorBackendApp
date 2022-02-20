@@ -31,10 +31,8 @@ steps:
   inputs:
     command: test
     projects: '**/*Tests/*.csproj'
-    arguments: --configuration $(buildConfiguration)
+    arguments: '--configuration $(buildConfiguration) --collect "Code coverage"'
     
-- task: PublishTestResults@2
-  condition: succeededOrFailed()
 
 - task: VSBuild@1
   inputs:
