@@ -4,44 +4,64 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
 
 trigger:
-- master
+  - master
 
 pool:
   name: Default
-  vmImage: 'windows-latest'
+  vmImage: "windows-latest"
 
 variables:
-  solution: '**/*.sln'
-  buildPlatform: 'Any CPU'
-  buildConfiguration: 'Release'
+  solution: "**/*.sln"
+  buildPlatform: "Any CPU"
+  buildConfiguration: "Release"
 
 steps:
-- task: UseDotNet@2
-  displayName: Use .NET 6.0
-  inputs:
-    packageType: 'sdk'
-    version: '6.0.x'
-- task: NuGetToolInstaller@1
+  - task: UseDotNet@2
+    displayName: Use .NET 6.0
+    inputs:
+      packageType: "sdk"
+      version: "6.0.x"
+  - task: NuGetToolInstaller@1
 
-- task: NuGetCommand@2
-  inputs:
-    restoreSolution: '$(solution)'
+  - task: NuGetCommand@2
+    inputs:
+      restoreSolution: "$(solution)"
 
-- task: DotNetCoreCLI@2
-  inputs:
-    command: test
-    projects: '**/*Tests/*.csproj'
-    arguments: '--configuration $(buildConfiguration) --collect "Code coverage"'
-    
+  - task: DotNetCoreCLI@2
+    displayName: "Install .NET tools from local manifest"
+    inputs:
+      command: custom
+      custom: tool
+      arguments: "restore"
 
-- task: VSBuild@1
-  inputs:
-    solution: '$(solution)'
-    msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: "test"
+      arguments: "--configuration $(buildConfiguration) /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=$(Build.SourcesDirectory)/TestResults/Coverage/"
+      publishTestResults: true
+      projects: "**/*Tests/*.csproj"
 
-- task: VSTest@2
-  inputs:
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+  - task: DotNetCoreCLI@2
+    displayName: "Create code coverage report"
+    inputs:
+      command: custom
+      custom: tool
+      arguments: "run reportgenerator -reports:$(Build.SourcesDirectory)/**/coverage.cobertura.xml -targetdir:$(Build.SourcesDirectory)/CodeCoverage -reporttypes:HtmlInline_AzurePipelines"
+
+  - task: PublishCodeCoverageResults@1
+    displayName: "Publish code coverage report"
+    inputs:
+      codeCoverageTool: "cobertura"
+      summaryFileLocation: "$(Build.SourcesDirectory)/**/coverage.cobertura.xml"
+
+  - task: VSBuild@1
+    inputs:
+      solution: "$(solution)"
+      msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
+      platform: "$(buildPlatform)"
+      configuration: "$(buildConfiguration)"
+
+  - task: VSTest@2
+    inputs:
+      platform: "$(buildPlatform)"
+      configuration: "$(buildConfiguration)"

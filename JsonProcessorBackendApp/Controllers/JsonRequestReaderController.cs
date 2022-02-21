@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace JsonProcessorBackendApp.Controllers
@@ -16,10 +16,10 @@ namespace JsonProcessorBackendApp.Controllers
             _logger = logger;
         }
         [HttpPost("Json")]
-        public async Task<ActionResult<JsonObject>> PostJsonRequest(JsonObject jsonRequest)
+        public async Task<ActionResult<JsonObject>> PostJsonRequest(JsonElement jsonRequest)
         {
             _logger.Log(LogLevel.Information, "Json Request Recieved");
-            if (jsonRequest.Count > 0)
+            if (!string.IsNullOrEmpty(jsonRequest.ToString()))
             {
                 _logger.Log(LogLevel.Information, "Request is valid");
 
