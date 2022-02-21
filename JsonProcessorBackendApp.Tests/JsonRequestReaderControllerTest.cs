@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
@@ -23,14 +24,9 @@ namespace JsonProcessorBackendApp.Tests
         public async Task PostJsonRequest_WithValidRequest_ReturnsOkResponse()
         {
             //Arrange
-            var keyValue = new System.Collections.Generic.KeyValuePair<string, JsonNode?>(
-                "name", null);
-          
+            var myObj = new object() { };
 
-            var req = new JsonObject() {
-              keyValue
-            };
-
+            var req = JsonSerializer.SerializeToElement(myObj);
 
             //Act
             var res = await _JsonController.PostJsonRequest(req);
@@ -46,7 +42,7 @@ namespace JsonProcessorBackendApp.Tests
             //Arrange
            
 
-            var req = new JsonObject() {
+            var req = new JsonElement() {
             };
 
             //Act
